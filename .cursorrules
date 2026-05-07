@@ -1,0 +1,51 @@
+# .cursorrules — Development guidance for Cursor AI
+
+## Project context
+Healthcare supply chain inventory AI agent for ~4,000 SKUs (SSM Health scale).
+Python/LangGraph/Groq. All agent interactions go through agent/core.py.
+
+## Architecture rules
+- All LLM calls use Groq (llama-3.3-70b-versatile) via langchain-groq.
+- Tools are LangChain @tool decorated functions in tools/*.py.
+- Agent state is managed by LangGraph (agent/core.py).
+- Database access uses SQLAlchemy sessions via `with get_db() as db:`.
+- Never call the DB directly from agent/core.py — always through tools.
+
+## Code style
+- Use type hints everywhere.
+- Tools must return strings (the LLM reads tool output as text).
+- Use `Optional[str]` not `str | None` for compatibility.
+- Keep tool docstrings precise — LLM uses them for tool selection.
+- Tool functions should be < 80 lines; extract helpers if longer.
+
+## Healthcare compliance rules to follow
+- Always log DEA/controlled substance operations.
+- PAR levels are the minimum safe quantity — never suggest ignoring them.
+- Purchase orders created by the agent are always DRAFT — require human approval.
+- Expiry dates must follow FIFO — document this in any expiry-related logic.
+
+## Adding new tools
+1. Create the @tool function in the appropriate tools/*.py file.
+2. Add it to the ALL_TOOLS list in agent/core.py.
+3. Write a test in tests/test_agent.py.
+4. Update the SYSTEM_PROMPT in agent/prompts.py if the capability is significant.
+
+## Testing
+- Run: pytest tests/ -v
+- Tests use SQLite in-memory via DATABASE_URL env override in conftest.
+- Mock Groq API calls — never make real LLM calls in tests.
+
+## Environment
+- GROQ_API_KEY is required. Get from console.groq.com.
+- Copy .env.example to .env and fill in values before running.
+- SQLite is fine for dev. Use Postgres for production.
+
+## Common queries to test manually
+```
+"What's below PAR in ICU-1?"
+"Reorder all PPE below PAR"
+"Which items expire within 14 days?"
+"Run ABC analysis for surgical supplies"
+"Transfer 100 units of SKU-00001 from Central Supply to OR-3"
+"Are there any controlled substance tracking issues?"
+```
