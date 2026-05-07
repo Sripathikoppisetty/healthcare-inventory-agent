@@ -168,7 +168,9 @@ def list_purchase_orders(
             "requested_at": o.requested_at.isoformat(),
         }
         for o in orders
-    ]@app.post("/admin/seed")
+    ]
+
+@app.post("/admin/seed")
 def seed_database():
     """Seed the database with demo data."""
     try:
