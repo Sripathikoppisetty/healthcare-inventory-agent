@@ -2,6 +2,7 @@
 
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
+from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
@@ -179,3 +180,18 @@ def seed_database():
         return {"status": "success", "message": "Database seeded with 4000 SKUs"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+@app.post("/query/stream")
+async def agent_query_stream(request: QueryRequest):
+    """Stream agent response token by token."""
+    if not request.query.strip():
+        raise HTTPException(status_code=400, detail="Query cannot be empty.")
+
+    def generate():
+        try:
+            for chunk in stream_query(request.query):
+                yield f"data: {chunk}\n\n"
+        except Exception as e:
+            yield f"data: [Error: {str(e)}]\n\n"
+        yield "data: [DONE]\n\n"
+
+    return StreamingResponse(generate(), media_type="text/event-stream")
