@@ -46,7 +46,7 @@ def expiry_scan(
         else:
             query = query.filter(InventoryRecord.expiry_date <= cutoff)
 
-        results = query.order_by(InventoryRecord.expiry_date).all()
+        results = query.order_by(InventoryRecord.expiry_date).limit(20).all()
 
         if not results:
             return f"✅ No items expiring within {days_ahead} days."
