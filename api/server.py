@@ -168,4 +168,12 @@ def list_purchase_orders(
             "requested_at": o.requested_at.isoformat(),
         }
         for o in orders
-    ]
+    ]@app.post("/admin/seed")
+def seed_database():
+    """Seed the database with demo data."""
+    try:
+        from scripts.seed_data import seed
+        seed()
+        return {"status": "success", "message": "Database seeded with 4000 SKUs"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
