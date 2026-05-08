@@ -12,7 +12,7 @@ from data.models import SKU, InventoryRecord, Location
 def expiry_scan(
     location_id: Optional[str] = None,
     days_ahead: int = 30,
-    include_expired: bool = True,
+    include_expired: Optional[str] = None,
 ) -> str:
     """
     Scan inventory for items expiring within the specified window.
@@ -41,7 +41,7 @@ def expiry_scan(
 
         if location_id:
             query = query.filter(InventoryRecord.location_id == location_id)
-        if not include_expired:
+        if include_expired and str(include_expired).lower() in ("false", "0", "no"):
             query = query.filter(InventoryRecord.expiry_date >= today)
         else:
             query = query.filter(InventoryRecord.expiry_date <= cutoff)
